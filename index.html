@@ -4,26 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menú Digital</title>
+    <!-- Librería gratuita para leer el CSV mágicamente -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #111827; color: #f9fafb; margin: 0; padding: 0; }
         header { background-color: #991b1b; padding: 20px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); }
         h1 { margin: 0; font-size: 1.5rem; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; }
+        
         .nav-categorias { display: flex; overflow-x: auto; padding: 12px; background: #1f2937; gap: 10px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #374151; scrollbar-width: none; }
         .nav-categorias::-webkit-scrollbar { display: none; }
         .nav-categorias a { color: #f9fafb; text-decoration: none; padding: 8px 16px; background: #374151; border-radius: 20px; white-space: nowrap; font-size: 0.9rem; font-weight: 500; }
         .nav-categorias a:hover, .nav-categorias a:active { background: #ef4444; }
+        
         .container { padding: 20px; max-width: 600px; margin: 0 auto; padding-bottom: 60px; }
-        .categoria { margin-bottom: 40px; padding-top: 50px; margin-top: -50px; }
-        .categoria-titulo { font-size: 1.8rem; color: #ef4444; border-bottom: 2px solid #ef4444; padding-bottom: 5px; margin-bottom: 15px; }
-        .item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #374151; }
-        .item-info { flex: 1; padding-right: 15px; }
+        .categoria { margin-bottom: 40px; padding-top: 70px; margin-top: -70px; }
+        .categoria-titulo { font-size: 1.8rem; color: #ef4444; border-bottom: 2px solid #ef4444; padding-bottom: 5px; margin-bottom: 15px; text-transform: uppercase; }
+        
+        .item { display: flex; gap: 15px; align-items: center; padding: 15px 0; border-bottom: 1px solid #374151; }
+        .item-img { width: 85px; height: 85px; border-radius: 10px; object-fit: cover; background-color: #374151; flex-shrink: 0; }
+        .item-info { flex: 1; }
         .item-nombre { font-weight: bold; font-size: 1.1rem; margin: 0 0 4px 0; }
         .item-desc { font-size: 0.85rem; color: #9ca3af; margin: 0; line-height: 1.4; }
-        .item-precio { font-weight: bold; color: #10b981; font-size: 1.15rem; white-space: nowrap; background: #1f2937; padding: 5px 10px; border-radius: 6px; }
-        .grid-precios { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; margin-bottom: 15px; }
-        .caja-precio { background: #1f2937; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #374151; }
-        .caja-titulo { font-size: 0.85rem; color: #9ca3af; display: block; margin-bottom: 4px; }
-        .caja-valor { font-weight: bold; color: #10b981; font-size: 1.2rem; }
+        .item-precio { font-weight: bold; color: #10b981; font-size: 1.15rem; background: #1f2937; padding: 6px 12px; border-radius: 6px; white-space: nowrap; }
+        
+        #pantallaCarga { text-align: center; padding: 50px; color: #9ca3af; font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -32,167 +36,75 @@
         <h1>Menú Digital</h1>
     </header>
 
-    <nav class="nav-categorias">
-        <a href="#carnes">Carnes</a>
-        <a href="#tacos">Tacos</a>
-        <a href="#consome">Consomé</a>
-        <a href="#tlacoyos">Tlacoyos</a>
-        <a href="#quesadillas">Quesadillas</a>
-        <a href="#gorditas">Gorditas</a>
-        <a href="#birria">Birria</a>
-        <a href="#bebidas">Bebidas</a>
-    </nav>
+    <nav class="nav-categorias" id="barraNav"></nav>
 
-    <div class="container">
-        
-        <!-- CARNES -->
-        <div id="carnes" class="categoria">
-            <h2 class="categoria-titulo">Carnes</h2>
-            <p style="color:#9ca3af; font-size:0.9rem; margin-bottom: 15px;">Nuestra deliciosa BARBACOA de borrego. Opciones: Costilla, Espinazo, Pancita, Espaldilla, Pierna, Mixiote, Pescuezo.</p>
-            
-            <div class="grid-precios">
-                <div class="caja-precio"><span class="caja-titulo">1 Kilogramo</span><span class="caja-valor">$700</span></div>
-                <div class="caja-precio"><span class="caja-titulo">3/4 Kilogramo</span><span class="caja-valor">$525</span></div>
-                <div class="caja-precio"><span class="caja-titulo">1/2 Kilogramo</span><span class="caja-valor">$350</span></div>
-                <div class="caja-precio"><span class="caja-titulo">1/4 Kilogramo</span><span class="caja-valor">$200</span></div>
-            </div>
-            
-            <div class="item">
-                <div class="item-info">
-                    <p class="item-nombre">Cabeza</p>
-                </div>
-                <div class="item-precio">$150</div>
-            </div>
-        </div>
-
-        <!-- TACOS -->
-        <div id="tacos" class="categoria">
-            <h2 class="categoria-titulo">Tacos</h2>
-            <p style="color:#9ca3af; font-size:0.9rem; margin-bottom: 10px;">Tacos de carne de borrego en tortilla de masa azul/amarilla.</p>
-            
-            <div class="item"><div class="item-info"><p class="item-nombre">Barbacoa</p></div><div class="item-precio">$50</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Mixiote</p></div><div class="item-precio">$50</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Pancita</p></div><div class="item-precio">$50</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Birria</p></div><div class="item-precio">$50</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Campechano</p></div><div class="item-precio">$50</div></div>
-            <div class="item">
-                <div class="item-info">
-                    <p class="item-nombre">Orden de tacos dorados</p>
-                    <p class="item-desc">2 tacos dorados con salsa verde, crema, lechuga y queso panela.</p>
-                </div>
-                <div class="item-precio">$120</div>
-            </div>
-            <div class="item">
-                <div class="item-info">
-                    <p class="item-nombre">1/2 Orden de tacos dorados</p>
-                    <p class="item-desc">1 taco dorado preparado.</p>
-                </div>
-                <div class="item-precio">$65</div>
-            </div>
-        </div>
-
-        <!-- CONSOMÉ -->
-        <div id="consome" class="categoria">
-            <h2 class="categoria-titulo">Consomé</h2>
-            <p style="color:#9ca3af; font-size:0.9rem; margin-bottom: 10px;">Delicioso consomé de borrego con arroz y garbanzos.</p>
-            
-            <div class="item">
-                <div class="item-info"><p class="item-nombre">Sencillo (Sin carne)</p></div>
-                <div class="item-precio">Ch $75 | Gr $115</div>
-            </div>
-            <div class="item">
-                <div class="item-info"><p class="item-nombre">Especial (Con carne)</p></div>
-                <div class="item-precio">Ch $115 | Gr $165</div>
-            </div>
-            <div class="item">
-                <div class="item-info"><p class="item-nombre">Birria (Con carne)</p></div>
-                <div class="item-precio">Ch $110 | Gr $160</div>
-            </div>
-            <div class="item">
-                <div class="item-info"><p class="item-nombre">Extra de garbanzo</p></div>
-                <div class="item-precio">$15</div>
-            </div>
-        </div>
-
-        <!-- TLACOYOS -->
-        <div id="tlacoyos" class="categoria">
-            <h2 class="categoria-titulo">Tlacoyos</h2>
-            <p style="color:#9ca3af; font-size:0.9rem; margin-bottom: 10px;">Masa azul/amarilla, rellenos de frijoles, queso manchego, salsa y crema.</p>
-            
-            <div class="item"><div class="item-info"><p class="item-nombre">Barbacoa</p></div><div class="item-precio">$120</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Mixiote</p></div><div class="item-precio">$120</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Pancita</p></div><div class="item-precio">$120</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Birria</p></div><div class="item-precio">$125</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Mixto (Barbacoa/Guisado)</p></div><div class="item-precio">$130</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Sencillo (Solo queso y salsa)</p></div><div class="item-precio">$70</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">De guisado</p></div><div class="item-precio">$80</div></div>
-        </div>
-
-        <!-- QUESADILLAS -->
-        <div id="quesadillas" class="categoria">
-            <h2 class="categoria-titulo">Quesadillas</h2>
-            <div class="item"><div class="item-info"><p class="item-nombre">Barbacoa</p></div><div class="item-precio">$95</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Queso</p></div><div class="item-precio">$60</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Mixta de guiso</p></div><div class="item-precio">$75</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Birria</p></div><div class="item-precio">$105</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Mixta de Barbacoa</p></div><div class="item-precio">$100</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">De guisado</p></div><div class="item-precio">$70</div></div>
-        </div>
-
-        <!-- GORDITAS -->
-        <div id="gorditas" class="categoria">
-            <h2 class="categoria-titulo">Gorditas</h2>
-            <div class="item"><div class="item-info"><p class="item-nombre">Barbacoa</p></div><div class="item-precio">$95</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Queso</p></div><div class="item-precio">$50</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Mixta de guiso</p></div><div class="item-precio">$75</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Birria</p></div><div class="item-precio">$105</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Mixta de Barbacoa</p></div><div class="item-precio">$100</div></div>
-            <div class="item">
-                <div class="item-info">
-                    <p class="item-nombre">De guisado</p>
-                    <p class="item-desc">Chicharrón prensado, Champiñón, Huitlacoche, Requesón, Flor de calabaza.</p>
-                </div>
-                <div class="item-precio">$70</div>
-            </div>
-        </div>
-
-        <!-- BIRRIA -->
-        <div id="birria" class="categoria">
-            <h2 class="categoria-titulo">Especiales Birria</h2>
-            <div class="item"><div class="item-info"><p class="item-nombre">Tlacoyos de Birria</p></div><div class="item-precio">$125</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Gorditas de Birria</p></div><div class="item-precio">$105</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Quesabirrias</p></div><div class="item-precio">$105</div></div>
-        </div>
-
-        <!-- BEBIDAS -->
-        <div id="bebidas" class="categoria">
-            <h2 class="categoria-titulo">Bebidas</h2>
-            <div class="item">
-                <div class="item-info">
-                    <p class="item-nombre">Embotellado</p>
-                    <p class="item-desc">Coca-Cola, Fanta, Cristal Negra, Cristal Fresa, Sidral Mundet.</p>
-                </div>
-                <div class="item-precio">$40</div>
-            </div>
-            <div class="item">
-                <div class="item-info">
-                    <p class="item-nombre">Naturales Base</p>
-                    <p class="item-desc">Horchata, Jamaica.</p>
-                </div>
-                <div class="item-precio">$45</div>
-            </div>
-            <div class="item">
-                <div class="item-info">
-                    <p class="item-nombre">De Temporada</p>
-                    <p class="item-desc">Pepino/limón, Fresa/limón, Tuna/limón, Mandarina, Guayaba/limón, Carambola/mandarina, Pitahaya/limón, Piña/chaya, Guanábana, Pepino/chaya, Limón/yerbabuena.</p>
-                </div>
-                <div class="item-precio">$75</div>
-            </div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Café de olla</p></div><div class="item-precio">$50</div></div>
-            <div class="item"><div class="item-info"><p class="item-nombre">Agua simple</p></div><div class="item-precio">$15</div></div>
-        </div>
-
+    <div class="container" id="menuContainer">
+        <div id="pantallaCarga">Cargando menú desde la nube... 🥩</div>
     </div>
 
+    <script>
+        // =========================================================
+        // Pega aquí el link largo que te dio Google Sheets (el .csv)
+        // =========================================================
+        const urlCSV = 'https://docs.google.com/spreadsheets/d/1Yf2x7wxdH5qiP4b8KOpgBHB_WQ51O83VQT4y6D4dZPU/edit?usp=sharing'; 
+        
+        Papa.parse(urlCSV, {
+            download: true,
+            header: true,
+            complete: function(resultados) {
+                renderizarMenu(resultados.data);
+            },
+            error: function() {
+                document.getElementById('pantallaCarga').innerText = "Hubo un error cargando el menú. Verifica el link del CSV.";
+            }
+        });
+
+        function renderizarMenu(datos) {
+            const nav = document.getElementById('barraNav');
+            const container = document.getElementById('menuContainer');
+            nav.innerHTML = '';
+            container.innerHTML = '';
+            
+            // Agrupar los platillos por categoría automáticamente
+            const categorias = {};
+            datos.forEach(fila => {
+                if(!fila.Categoría || !fila.Producto) return; // Salta filas vacías
+                if(!categorias[fila.Categoría]) categorias[fila.Categoría] = [];
+                categorias[fila.Categoría].push(fila);
+            });
+
+            // Dibujar el menú
+            Object.keys(categorias).forEach(cat => {
+                const idCat = cat.replace(/\s+/g, '-').toLowerCase();
+                
+                // Crea el botón en el menú de navegación superior
+                nav.innerHTML += `<a href="#${idCat}">${cat}</a>`;
+
+                // Crea el contenedor de la categoría
+                let htmlCategoria = `<div id="${idCat}" class="categoria">
+                                        <h2 class="categoria-titulo">${cat}</h2>`;
+
+                // Agrega cada platillo de esta categoría
+                categorias[cat].forEach(item => {
+                    const desc = (item.Descripción && item.Descripción !== '-') ? `<p class="item-desc">${item.Descripción}</p>` : '';
+                    const img = (item.Imagen && item.Imagen.trim() !== '') ? `<img src="${item.Imagen}" class="item-img" alt="${item.Producto}">` : '';
+                    
+                    htmlCategoria += `
+                        <div class="item">
+                            ${img}
+                            <div class="item-info">
+                                <p class="item-nombre">${item.Producto}</p>
+                                ${desc}
+                            </div>
+                            <div class="item-precio">${item.Precio}</div>
+                        </div>
+                    `;
+                });
+
+                htmlCategoria += `</div>`;
+                container.innerHTML += htmlCategoria;
+            });
+        }
+    </script>
 </body>
 </html>
