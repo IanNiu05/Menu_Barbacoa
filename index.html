@@ -110,7 +110,6 @@
             cursor: pointer;
             transition: all 0.25s ease;
             position: relative;
-            user-select: none;
         }
         
         .item-card:hover {
@@ -132,13 +131,9 @@
             background-color: #2a2a2a; 
             flex-shrink: 0; 
             border: 2px solid #333;
-            pointer-events: none;
         }
         
-        .item-info { 
-            flex: 1; 
-            pointer-events: none;
-        }
+        .item-info { flex: 1; }
         
         .item-nombre { 
             font-weight: 700; 
@@ -166,7 +161,6 @@
             padding: 6px 12px; 
             border-radius: 20px; 
             white-space: nowrap; 
-            pointer-events: none;
         }
 
         /* RECUADRO LATERAL DERECHO (MINIMALISTA) */
@@ -252,7 +246,6 @@
 
         #pantallaCarga { text-align: center; padding: 60px 20px; color: #666; font-size: 1.1rem; }
 
-        /* VISTA RESPONSIVA PARA CELULARES */
         @media (max-width: 820px) {
             .main-layout {
                 flex-direction: column;
@@ -275,12 +268,10 @@
     <nav class="nav-categorias" id="barraNav"></nav>
 
     <div class="main-layout">
-        <!-- IZQUIERDA: LISTA DE PLATILLOS -->
         <div class="menu-seccion" id="menuContainer">
             <div id="pantallaCarga">Cargando cortes y guisados...</div>
         </div>
 
-        <!-- DERECHA: PANEL RECUADRO LATERAL -->
         <aside class="preview-panel" id="previewPanel">
             <div class="preview-img-wrapper">
                 <img src="" id="previewImg" class="preview-img" alt="Platillo seleccionado" onerror="this.src='https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80';">
@@ -299,6 +290,7 @@
 
     <script>
         const urlCSV = 'https://docs.google.com/spreadsheets/d/1Yf2x7wxdH5qiP4b8KOpgBHB_WQ51O83VQT4y6D4dZPU/export?format=csv'; 
+        let listaMenuData = [];
 
         Papa.parse(urlCSV, {
             download: true,
@@ -317,11 +309,14 @@
             nav.innerHTML = '';
             container.innerHTML = '';
             
+            // Guardar solo filas válidas en memoria
+            listaMenuData = datos.filter(fila => fila.Categoría && fila.Producto);
+
             const categorias = {};
-            datos.forEach(fila => {
-                if(!fila.Categoría || !fila.Producto) return;
-                if(!categorias[fila.Categoría]) categorias[fila.Categoría] = [];
-                categorias[fila.Categoría].push(fila);
+            listaMenuData.forEach((item, index) => {
+                item._posicion = index;
+                if(!categorias[item.Categoría]) categorias[item.Categoría] = [];
+                categorias[item.Categoría].push(item);
             });
 
             let esPrimero = true;
@@ -344,11 +339,7 @@
                         : ``;
 
                     HTMLCompleto += `
-                        <div class="item-card" 
-                             data-nombre="${encodeURIComponent(item.Producto)}" 
-                             data-precio="${encodeURIComponent(item.Precio)}" 
-                             data-desc="${encodeURIComponent(descCorta)}" 
-                             data-imagen="${encodeURIComponent(rutaImg)}">
+                        <div class="item-card" id="item-card-${item._posicion}" onclick="seleccionarPorIndice(${item._posicion})">
                             ${imgElement}
                             <div class="item-info">
                                 <p class="item-nombre">${item.Producto}</p>
@@ -366,12 +357,11 @@
             container.innerHTML = HTMLCompleto;
 
             // Seleccionar automáticamente el primer platillo al cargar
-            const primeraTarjeta = container.querySelector('.item-card');
-            if (primeraTarjeta) {
-                activarTarjeta(primeraTarjeta);
+            if (listaMenuData.length > 0) {
+                seleccionarPorIndice(0);
             }
 
-            // Navegación con la barra de categorías superior
+            // Navegación superior
             const enlacesNav = nav.querySelectorAll('a');
             enlacesNav.forEach(enlace => {
                 enlace.addEventListener('click', function() {
@@ -381,40 +371,34 @@
             });
         }
 
-        // DELEGACIÓN DE EVENTOS: Escucha clics de forma infalible en todo el contenedor
-        document.getElementById('menuContainer').addEventListener('click', function(e) {
-            const card = e.target.closest('.item-card');
-            if (card) {
-                activarTarjeta(card);
-            }
-        });
+        function seleccionarPorIndice(index) {
+            const item = listaMenuData[index];
+            if (!item) return;
 
-        function activarTarjeta(cardElement) {
-            document.querySelectorAll('.item-card').forEach(c => c.classList.remove('seleccionado'));
-            cardElement.classList.add('seleccionado');
+            // Resaltar tarjeta activa
+            document.querySelectorAll('.item-card').forEach(card => card.classList.remove('seleccionado'));
+            const tarjetaActiva = document.getElementById(`item-card-${index}`);
+            if (tarjetaActiva) tarjetaActiva.classList.add('seleccionado');
 
-            const nombre = decodeURIComponent(cardElement.dataset.nombre || '');
-            const precio = decodeURIComponent(cardElement.dataset.precio || '');
-            const desc = decodeURIComponent(cardElement.dataset.desc || '');
-            const imagen = decodeURIComponent(cardElement.dataset.imagen || '');
+            // Actualizar datos del panel lateral
+            document.getElementById('previewTitulo').innerText = item.Producto;
+            document.getElementById('previewPrecio').innerText = item.Precio;
+
+            const descText = (item.Descripción && item.Descripción !== '-') 
+                ? item.Descripción 
+                : 'Delicioso platillo preparado al momento con el sazón tradicional de la casa.';
+            document.getElementById('previewDesc').innerText = descText;
 
             const previewImg = document.getElementById('previewImg');
-            const previewTitulo = document.getElementById('previewTitulo');
-            const previewPrecio = document.getElementById('previewPrecio');
-            const previewDesc = document.getElementById('previewDesc');
-
-            previewTitulo.innerText = nombre;
-            previewPrecio.innerText = precio;
-            previewDesc.innerText = desc !== '' 
-                ? desc 
-                : 'Delicioso platillo preparado al momento con el sazón tradicional de la casa.';
-
-            if (imagen !== '') {
-                previewImg.src = imagen;
+            if (item.Imagen && item.Imagen.trim() !== '') {
+                previewImg.src = item.Imagen.trim();
             } else {
                 previewImg.src = 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80';
             }
         }
+    </script>
+</body>
+</html>
     </script>
 </body>
 </html>
