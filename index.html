@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Menú Digital 🔥</title>
-    <!-- Librería para leer el CSV mágicamente -->
+    <!-- Librería para leer el CSV de Google Sheets -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
@@ -110,10 +110,11 @@
             cursor: pointer;
             transition: all 0.25s ease;
             position: relative;
+            user-select: none;
         }
         
         .item-card:hover {
-            border-color: #444;
+            border-color: #555;
             transform: translateY(-1px);
         }
 
@@ -131,9 +132,13 @@
             background-color: #2a2a2a; 
             flex-shrink: 0; 
             border: 2px solid #333;
+            pointer-events: none;
         }
         
-        .item-info { flex: 1; }
+        .item-info { 
+            flex: 1; 
+            pointer-events: none;
+        }
         
         .item-nombre { 
             font-weight: 700; 
@@ -161,6 +166,7 @@
             padding: 6px 12px; 
             border-radius: 20px; 
             white-space: nowrap; 
+            pointer-events: none;
         }
 
         /* RECUADRO LATERAL DERECHO (MINIMALISTA) */
@@ -293,7 +299,6 @@
 
     <script>
         const urlCSV = 'https://docs.google.com/spreadsheets/d/1Yf2x7wxdH5qiP4b8KOpgBHB_WQ51O83VQT4y6D4dZPU/export?format=csv'; 
-        let primerItem = null;
 
         Papa.parse(urlCSV, {
             download: true,
@@ -320,59 +325,53 @@
             });
 
             let esPrimero = true;
+            let HTMLCompleto = '';
 
             Object.keys(categorias).forEach(cat => {
                 const idCat = cat.replace(/\s+/g, '-').toLowerCase();
-                
                 const claseActivo = esPrimero ? 'class="activo"' : '';
                 nav.innerHTML += `<a href="#${idCat}" ${claseActivo}>${cat}</a>`;
 
-                let htmlCategoria = `<div id="${idCat}" class="categoria">
-                                        <h2 class="categoria-titulo">${cat}</h2>`;
-
-                container.innerHTML += htmlCategoria;
-                const catDiv = document.getElementById(idCat);
+                HTMLCompleto += `<div id="${idCat}" class="categoria">
+                                    <h2 class="categoria-titulo">${cat}</h2>`;
 
                 categorias[cat].forEach(item => {
                     const descCorta = (item.Descripción && item.Descripción !== '-') ? item.Descripción : '';
                     const rutaImg = (item.Imagen && item.Imagen.trim() !== '') ? item.Imagen.trim() : '';
                     
-                    const card = document.createElement('div');
-                    card.className = 'item-card';
-
                     const imgElement = rutaImg 
                         ? `<img src="${rutaImg}" class="item-img" alt="${item.Producto}" onerror="this.style.display='none'">`
                         : ``;
 
-                    card.innerHTML = `
-                        ${imgElement}
-                        <div class="item-info">
-                            <p class="item-nombre">${item.Producto}</p>
-                            ${descCorta ? `<p class="item-desc-corta">${descCorta}</p>` : ''}
+                    HTMLCompleto += `
+                        <div class="item-card" 
+                             data-nombre="${encodeURIComponent(item.Producto)}" 
+                             data-precio="${encodeURIComponent(item.Precio)}" 
+                             data-desc="${encodeURIComponent(descCorta)}" 
+                             data-imagen="${encodeURIComponent(rutaImg)}">
+                            ${imgElement}
+                            <div class="item-info">
+                                <p class="item-nombre">${item.Producto}</p>
+                                ${descCorta ? `<p class="item-desc-corta">${descCorta}</p>` : ''}
+                            </div>
+                            <div class="item-precio">${item.Precio}</div>
                         </div>
-                        <div class="item-precio">${item.Precio}</div>
                     `;
-
-                    // Al hacer clic en la tarjeta, actualiza el panel derecho
-                    card.addEventListener('click', () => seleccionarProducto(card, item));
-
-                    catDiv.appendChild(card);
-
-                    // Guardar primer producto para seleccionarlo por defecto al cargar
-                    if (!primerItem) {
-                        primerItem = { card, item };
-                    }
                 });
 
+                HTMLCompleto += `</div>`;
                 esPrimero = false;
             });
 
-            // Seleccionar automáticamente el primer producto
-            if (primerItem) {
-                seleccionarProducto(primerItem.card, primerItem.item);
+            container.innerHTML = HTMLCompleto;
+
+            // Seleccionar automáticamente el primer platillo al cargar
+            const primeraTarjeta = container.querySelector('.item-card');
+            if (primeraTarjeta) {
+                activarTarjeta(primeraTarjeta);
             }
 
-            // Scroll suave e iluminación de navegación
+            // Navegación con la barra de categorías superior
             const enlacesNav = nav.querySelectorAll('a');
             enlacesNav.forEach(enlace => {
                 enlace.addEventListener('click', function() {
@@ -382,35 +381,39 @@
             });
         }
 
-        function seleccionarProducto(cardElement, item) {
-            // Desmarcar selecciones previas
+        // DELEGACIÓN DE EVENTOS: Escucha clics de forma infalible en todo el contenedor
+        document.getElementById('menuContainer').addEventListener('click', function(e) {
+            const card = e.target.closest('.item-card');
+            if (card) {
+                activarTarjeta(card);
+            }
+        });
+
+        function activarTarjeta(cardElement) {
             document.querySelectorAll('.item-card').forEach(c => c.classList.remove('seleccionado'));
-            // Marcar platillo activo
             cardElement.classList.add('seleccionado');
 
-            // Actualizar el recuadro lateral derecho
+            const nombre = decodeURIComponent(cardElement.dataset.nombre || '');
+            const precio = decodeURIComponent(cardElement.dataset.precio || '');
+            const desc = decodeURIComponent(cardElement.dataset.desc || '');
+            const imagen = decodeURIComponent(cardElement.dataset.imagen || '');
+
             const previewImg = document.getElementById('previewImg');
             const previewTitulo = document.getElementById('previewTitulo');
             const previewPrecio = document.getElementById('previewPrecio');
             const previewDesc = document.getElementById('previewDesc');
 
-            previewTitulo.innerText = item.Producto;
-            previewPrecio.innerText = item.Precio;
-
-            const descText = (item.Descripción && item.Descripción !== '-') 
-                ? item.Descripción 
+            previewTitulo.innerText = nombre;
+            previewPrecio.innerText = precio;
+            previewDesc.innerText = desc !== '' 
+                ? desc 
                 : 'Delicioso platillo preparado al momento con el sazón tradicional de la casa.';
-            previewDesc.innerText = descText;
 
-            if (item.Imagen && item.Imagen.trim() !== '') {
-                previewImg.src = item.Imagen.trim();
+            if (imagen !== '') {
+                previewImg.src = imagen;
             } else {
                 previewImg.src = 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80';
             }
-        }
-    </script>
-</body>
-</html>
         }
     </script>
 </body>
