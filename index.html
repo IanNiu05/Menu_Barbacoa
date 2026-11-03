@@ -2,51 +2,175 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menú Digital</title>
-    <!-- Librería gratuita para leer el CSV mágicamente -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Menú Digital 🔥</title>
+    <!-- Librería para leer el CSV mágicamente -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #111827; color: #f9fafb; margin: 0; padding: 0; }
-        header { background-color: #991b1b; padding: 20px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); }
-        h1 { margin: 0; font-size: 1.5rem; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; }
+        /* === RESET Y ESTILOS BASE === */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { 
+            background-color: #0d0d0d; /* Fondo casi negro */
+            color: #ffffff; 
+            padding-top: env(safe-area-inset-top); /* Evitar notch del celular */
+            padding-bottom: 80px; 
+        }
+
+        /* === CABECERA === */
+        header { 
+            padding: 25px 20px 15px 20px; 
+            text-align: center; 
+            position: relative;
+        }
+        h1 { 
+            font-size: 1.6rem; 
+            font-weight: 800; 
+            letter-spacing: 1px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* === BARRA DE CATEGORÍAS (NAVEGACIÓN) === */
+        .nav-categorias { 
+            display: flex; 
+            overflow-x: auto; 
+            padding: 10px 20px; 
+            gap: 12px; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            background: rgba(13, 13, 13, 0.95);
+            backdrop-filter: blur(8px);
+            scrollbar-width: none; /* Ocultar scrollbar Firefox */
+            border-bottom: 1px solid #222;
+        }
+        .nav-categorias::-webkit-scrollbar { display: none; } /* Ocultar scrollbar Chrome/Safari */
         
-        .nav-categorias { display: flex; overflow-x: auto; padding: 12px; background: #1f2937; gap: 10px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #374151; scrollbar-width: none; }
-        .nav-categorias::-webkit-scrollbar { display: none; }
-        .nav-categorias a { color: #f9fafb; text-decoration: none; padding: 8px 16px; background: #374151; border-radius: 20px; white-space: nowrap; font-size: 0.9rem; font-weight: 500; }
-        .nav-categorias a:hover, .nav-categorias a:active { background: #ef4444; }
+        .nav-categorias a { 
+            color: #a3a3a3; 
+            text-decoration: none; 
+            padding: 8px 18px; 
+            background: #1c1c1c; 
+            border: 1px solid #333;
+            border-radius: 20px; 
+            white-space: nowrap; 
+            font-size: 0.85rem; 
+            font-weight: 600; 
+            transition: all 0.3s ease;
+        }
+        .nav-categorias a:hover, .nav-categorias a.activo { 
+            background: #d32f2f; /* Rojo intenso del diseño */
+            color: white; 
+            border-color: #d32f2f;
+            box-shadow: 0 0 10px rgba(211, 47, 47, 0.4); /* Resplandor rojo */
+        }
+
+        /* === CONTENEDOR PRINCIPAL === */
+        .container { 
+            padding: 0 20px; 
+            max-width: 600px; 
+            margin: 0 auto; 
+        }
+
+        /* === CATEGORÍAS === */
+        .categoria { 
+            margin-bottom: 40px; 
+            padding-top: 80px; /* Compensa la barra sticky al hacer scroll */
+            margin-top: -60px; 
+        }
+        .categoria-titulo { 
+            font-size: 1.4rem; 
+            color: #d32f2f; /* Rojo del título */
+            text-transform: uppercase; 
+            font-weight: 800;
+            margin-bottom: 15px; 
+            display: inline-block;
+            border-bottom: 2px solid #d32f2f;
+            padding-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        /* === TARJETAS DE PLATILLOS === */
+        .item-card { 
+            background: #151515; 
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 15px; 
+            margin-bottom: 12px;
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            position: relative;
+            overflow: hidden;
+        }
         
-        .container { padding: 20px; max-width: 600px; margin: 0 auto; padding-bottom: 60px; }
-        .categoria { margin-bottom: 40px; padding-top: 70px; margin-top: -70px; }
-        .categoria-titulo { font-size: 1.8rem; color: #ef4444; border-bottom: 2px solid #ef4444; padding-bottom: 5px; margin-bottom: 15px; text-transform: uppercase; }
+        /* Destello ligero en la tarjeta */
+        .item-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        }
+
+        .item-img { 
+            width: 65px; 
+            height: 65px; 
+            border-radius: 50%; /* Foto en círculo */
+            object-fit: cover; 
+            background-color: #2a2a2a; 
+            flex-shrink: 0; 
+            border: 2px solid #333;
+        }
         
-        .item { display: flex; gap: 15px; align-items: center; padding: 15px 0; border-bottom: 1px solid #374151; }
-        .item-img { width: 85px; height: 85px; border-radius: 10px; object-fit: cover; background-color: #374151; flex-shrink: 0; }
         .item-info { flex: 1; }
-        .item-nombre { font-weight: bold; font-size: 1.1rem; margin: 0 0 4px 0; }
-        .item-desc { font-size: 0.85rem; color: #9ca3af; margin: 0; line-height: 1.4; }
-        .item-precio { font-weight: bold; color: #10b981; font-size: 1.15rem; background: #1f2937; padding: 6px 12px; border-radius: 6px; white-space: nowrap; }
         
-        #pantallaCarga { text-align: center; padding: 50px; color: #9ca3af; font-size: 1.2rem; }
+        .item-nombre { 
+            font-weight: 700; 
+            font-size: 1.1rem; 
+            margin: 0 0 5px 0; 
+            color: #f1f1f1;
+        }
+        
+        .item-desc { 
+            font-size: 0.8rem; 
+            color: #888; 
+            margin: 0; 
+            line-height: 1.4; 
+        }
+        
+        .item-precio { 
+            font-weight: 700; 
+            color: #d32f2f; 
+            font-size: 1rem; 
+            background: rgba(211, 47, 47, 0.1); 
+            border: 1px solid rgba(211, 47, 47, 0.3);
+            padding: 6px 12px; 
+            border-radius: 20px; /* Precio redondeado estilo píldora */
+            white-space: nowrap; 
+        }
+
+        #pantallaCarga { text-align: center; padding: 60px 20px; color: #666; font-size: 1.1rem; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Menú Digital</h1>
+        <h1>MENÚ DIGITAL 🔥</h1>
     </header>
 
     <nav class="nav-categorias" id="barraNav"></nav>
 
     <div class="container" id="menuContainer">
-        <div id="pantallaCarga">Cargando menú desde la nube... 🥩</div>
+        <div id="pantallaCarga">Cargando cortes y guisados...</div>
     </div>
 
     <script>
         // =========================================================
-        // Pega aquí el link largo que te dio Google Sheets (el .csv)
+        // Conexión a tu Google Sheets (La misma que ya funcionaba)
         // =========================================================
-      const urlCSV = 'https://docs.google.com/spreadsheets/d/1Yf2x7wxdH5qiP4b8KOpgBHB_WQ51O83VQT4y6D4dZPU/export?format=csv';
+        const urlCSV = 'https://docs.google.com/spreadsheets/d/1Yf2x7wxdH5qiP4b8KOpgBHB_WQ51O83VQT4y6D4dZPU/export?format=csv'; 
         
         Papa.parse(urlCSV, {
             download: true,
@@ -55,7 +179,7 @@
                 renderizarMenu(resultados.data);
             },
             error: function() {
-                document.getElementById('pantallaCarga').innerText = "Hubo un error cargando el menú. Verifica el link del CSV.";
+                document.getElementById('pantallaCarga').innerText = "Hubo un error cargando el menú. Verifica la conexión.";
             }
         });
 
@@ -65,32 +189,37 @@
             nav.innerHTML = '';
             container.innerHTML = '';
             
-            // Agrupar los platillos por categoría automáticamente
             const categorias = {};
             datos.forEach(fila => {
-                if(!fila.Categoría || !fila.Producto) return; // Salta filas vacías
+                if(!fila.Categoría || !fila.Producto) return;
                 if(!categorias[fila.Categoría]) categorias[fila.Categoría] = [];
                 categorias[fila.Categoría].push(fila);
             });
 
-            // Dibujar el menú
+            let esPrimero = true;
+
             Object.keys(categorias).forEach(cat => {
                 const idCat = cat.replace(/\s+/g, '-').toLowerCase();
                 
-                // Crea el botón en el menú de navegación superior
-                nav.innerHTML += `<a href="#${idCat}">${cat}</a>`;
+                // Construir botones de navegación (el primero se marca activo)
+                const claseActivo = esPrimero ? 'class="activo"' : '';
+                nav.innerHTML += `<a href="#${idCat}" ${claseActivo}>${cat}</a>`;
 
-                // Crea el contenedor de la categoría
+                // Construir contenedor de categoría
                 let htmlCategoria = `<div id="${idCat}" class="categoria">
                                         <h2 class="categoria-titulo">${cat}</h2>`;
 
-                // Agrega cada platillo de esta categoría
+                // Construir cada tarjeta de platillo
                 categorias[cat].forEach(item => {
                     const desc = (item.Descripción && item.Descripción !== '-') ? `<p class="item-desc">${item.Descripción}</p>` : '';
-                    const img = (item.Imagen && item.Imagen.trim() !== '') ? `<img src="${item.Imagen}" class="item-img" alt="${item.Producto}">` : '';
+                    
+                    // Si en Excel pones un link de foto, la pone; si no, deja el espacio vacío elegantemente
+                    const img = (item.Imagen && item.Imagen.trim() !== '') 
+                                ? `<img src="${item.Imagen}" class="item-img" alt="${item.Producto}">` 
+                                : ``; // Puedes poner un SVG por defecto aquí si quieres
                     
                     htmlCategoria += `
-                        <div class="item">
+                        <div class="item-card">
                             ${img}
                             <div class="item-info">
                                 <p class="item-nombre">${item.Producto}</p>
@@ -103,6 +232,16 @@
 
                 htmlCategoria += `</div>`;
                 container.innerHTML += htmlCategoria;
+                esPrimero = false;
+            });
+
+            // Pequeño script para iluminar el botón del menú cuando haces scroll
+            const enlacesNav = nav.querySelectorAll('a');
+            enlacesNav.forEach(enlace => {
+                enlace.addEventListener('click', function() {
+                    enlacesNav.forEach(e => e.classList.remove('activo'));
+                    this.classList.add('activo');
+                });
             });
         }
     </script>
