@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Menú Digital</title>
-    <!-- Librería para leer el CSV de Google Sheets -->
+    <title>Menú Digital 🔥</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
@@ -18,7 +17,7 @@
         header { padding: 20px 20px 10px 20px; text-align: center; }
         h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-        /* BANNER DE PROMOCIONES (CARRUSEL) */
+        /* BANNER DE PROMOCIONES */
         .banner-container {
             max-width: 1150px;
             margin: 0 auto 20px auto;
@@ -87,7 +86,6 @@
             margin: 0;
         }
 
-        /* Indicadores de bolitas */
         .carrusel-dots {
             position: absolute;
             bottom: 10px;
@@ -133,14 +131,12 @@
         .main-layout { display: flex; gap: 30px; max-width: 1150px; margin: 0 auto; padding: 0 20px; align-items: flex-start; }
         .menu-seccion { flex: 1; min-width: 0; }
 
-        /* CATEGORÍAS */
         .categoria { margin-bottom: 40px; padding-top: 70px; margin-top: -60px; }
         .categoria-titulo { 
             font-size: 1.4rem; color: #d32f2f; text-transform: uppercase; font-weight: 800;
             margin-bottom: 15px; display: inline-block; border-bottom: 2px solid #d32f2f; padding-bottom: 4px;
         }
 
-        /* TARJETAS DE PLATILLOS (CON ANIMACIÓN) */
         .item-card { 
             background: #151515; border: 1px solid #2a2a2a; border-radius: 12px; 
             margin-bottom: 12px; overflow: hidden; cursor: pointer;
@@ -172,7 +168,6 @@
             border: 1px solid #374151; padding: 6px 12px; border-radius: 20px; white-space: nowrap; 
         }
 
-        /* ACORDEÓN DESPLEGABLE EN CELULAR */
         .item-detalles-desplegable {
             max-height: 0; opacity: 0; overflow: hidden; 
             transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, padding 0.3s ease;
@@ -197,7 +192,6 @@
         .desc-full-titulo { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #d32f2f; font-weight: 700; margin-bottom: 6px; }
         .desc-full-texto { font-size: 0.9rem; color: #a3a3a3; line-height: 1.5; margin: 0; }
 
-        /* RECUADRO LATERAL DERECHO (Solo visible en PC) */
         .preview-panel {
             width: 360px; position: sticky; top: 75px; background: #141414; border: 1px solid #282828;
             border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); flex-shrink: 0;
@@ -218,30 +212,12 @@
 <body>
 
     <header>
-        <h1>MENÚ DIGITAL</h1>
+        <h1>MENÚ DIGITAL 🔥</h1>
     </header>
 
-    <!-- BANNER DE PROMOCIONES NUBE -->
-    <div class="banner-container">
+    <div class="banner-container" id="bannerContainer" style="display: none;">
         <div class="carrusel">
-            <div class="carrusel-slides" id="carruselSlides">
-                <!-- Slide 1 Demo -->
-                <div class="slide">
-                    <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1000&q=80" alt="Promo Barbacoa">
-                    <div class="slide-content">
-                        <span class="slide-tag">Especial del Día 🔥</span>
-                        <h3 class="slide-titulo">1 kg de Barbacoa + Consomé Gratis</h3>
-                    </div>
-                </div>
-                <!-- Slide 2 Demo -->
-                <div class="slide">
-                    <img src="https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=1000&q=80" alt="Promo Chilaquiles">
-                    <div class="slide-content">
-                        <span class="slide-tag">Paquete Mañanero ☕</span>
-                        <h3 class="slide-titulo">Chilaquiles + Café de Olla por $149</h3>
-                    </div>
-                </div>
-            </div>
+            <div class="carrusel-slides" id="carruselSlides"></div>
             <div class="carrusel-dots" id="carruselDots"></div>
         </div>
     </div>
@@ -249,12 +225,10 @@
     <nav class="nav-categorias" id="barraNav"></nav>
 
     <div class="main-layout">
-        <!-- LISTA DE PLATILLOS -->
         <div class="menu-seccion" id="menuContainer">
             <div id="pantallaCarga">Cargando cortes y guisados...</div>
         </div>
 
-        <!-- RECUADRO LATERAL DERECHO (Solo visible en PC) -->
         <aside class="preview-panel" id="previewPanel">
             <div class="preview-img-wrapper">
                 <img src="" id="previewImg" class="preview-img" alt="Platillo seleccionado" onerror="this.src='https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80';">
@@ -272,10 +246,23 @@
     </div>
 
     <script>
-        const urlCSV = 'https://docs.google.com/spreadsheets/d/1Yf2x7wxdH5qiP4b8KOpgBHB_WQ51O83VQT4y6D4dZPU/export?format=csv'; 
+        const sheetID = '1Yf2x7wxdH5qiP4b8KOpgBHB_WQ51O83VQT4y6D4dZPU';
+        const urlMenuCSV = `https://docs.google.com/spreadsheets/d/${sheetID}/export?format=csv&gviz/tq?tq=SELECT%20*`;
+        const urlPromosCSV = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=Promos`;
+        
         let listaMenuData = [];
 
-        Papa.parse(urlCSV, {
+        // Cargar Promos desde la pestaña 'Promos'
+        Papa.parse(urlPromosCSV, {
+            download: true,
+            header: true,
+            complete: function(resultados) {
+                renderizarPromos(resultados.data);
+            }
+        });
+
+        // Cargar Menú desde la pestaña principal
+        Papa.parse(urlMenuCSV, {
             download: true,
             header: true,
             complete: function(resultados) {
@@ -285,6 +272,41 @@
                 document.getElementById('pantallaCarga').innerText = "Hubo un error cargando el menú. Verifica la conexión.";
             }
         });
+
+        function renderizarPromos(promos) {
+            const container = document.getElementById('bannerContainer');
+            const slidesContainer = document.getElementById('carruselSlides');
+            const dotsContainer = document.getElementById('carruselDots');
+            
+            const promosActivas = promos.filter(p => p.Título && (p.Estado === 'Activo' || !p.Estado));
+            
+            if (promosActivas.length === 0) return;
+
+            slidesContainer.innerHTML = '';
+            dotsContainer.innerHTML = '';
+
+            promosActivas.forEach((p, i) => {
+                const img = (p.Imagen && p.Imagen.trim() !== '') ? p.Imagen.trim() : 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1000&q=80';
+                const tag = p.Etiqueta || 'Promoción';
+
+                slidesContainer.innerHTML += `
+                    <div class="slide">
+                        <img src="${img}" alt="${p.Título}" onerror="this.src='https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1000&q=80';">
+                        <div class="slide-content">
+                            <span class="slide-tag">${tag}</span>
+                            <h3 class="slide-titulo">${p.Título}</h3>
+                        </div>
+                    </div>
+                `;
+
+                dotsContainer.innerHTML += `<div class="dot ${i === 0 ? 'activo' : ''}" onclick="moverSlide(${i})"></div>`;
+            });
+
+            container.style.display = 'block';
+            if (promosActivas.length > 1) {
+                iniciarCarruselAuto(promosActivas.length);
+            }
+        }
 
         function renderizarMenu(datos) {
             const nav = document.getElementById('barraNav');
@@ -352,8 +374,6 @@
                     this.classList.add('activo');
                 });
             });
-
-            iniciarCarrusel();
         }
 
         function seleccionarPorIndice(index) {
@@ -378,8 +398,7 @@
                 document.getElementById('previewPrecio').innerText = item.Precio;
                 document.getElementById('previewDesc').innerText = descText;
                 document.getElementById('previewImg').src = imgSrc;
-            }
-            else {
+            } else {
                 setTimeout(() => {
                     const rect = tarjetaSeleccionada.getBoundingClientRect();
                     if (rect.bottom > window.innerHeight) {
@@ -389,22 +408,12 @@
             }
         }
 
-        // LÓGICA DEL CARRUSEL AUTOMÁTICO
         let slideActual = 0;
-        function iniciarCarrusel() {
-            const slides = document.querySelectorAll('.slide');
-            const dotsContainer = document.getElementById('carruselDots');
-            if (slides.length <= 1) return;
-
-            dotsContainer.innerHTML = '';
-            slides.forEach((_, i) => {
-                dotsContainer.innerHTML += `<div class="dot ${i === 0 ? 'activo' : ''}" onclick="moverSlide(${i})"></div>`;
-            });
-
+        function iniciarCarruselAuto(totalSlides) {
             setInterval(() => {
-                slideActual = (slideActual + 1) % slides.length;
+                slideActual = (slideActual + 1) % totalSlides;
                 moverSlide(slideActual);
-            }, 4000); // Cambia cada 4 segundos
+            }, 4000);
         }
 
         function moverSlide(index) {
@@ -416,6 +425,9 @@
                 dot.classList.toggle('activo', i === index);
             });
         }
+    </script>
+</body>
+</html>
     </script>
 </body>
 </html>
