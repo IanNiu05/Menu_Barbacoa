@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Menú Digital 🔥</title>
+    <!-- Librería para leer el CSV de Google Sheets -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
@@ -22,6 +23,7 @@
             max-width: 1150px;
             margin: 0 auto 20px auto;
             padding: 0 20px;
+            display: block;
         }
 
         .carrusel {
@@ -215,7 +217,7 @@
         <h1>MENÚ DIGITAL 🔥</h1>
     </header>
 
-    <div class="banner-container" id="bannerContainer" style="display: none;">
+    <div class="banner-container" id="bannerContainer">
         <div class="carrusel">
             <div class="carrusel-slides" id="carruselSlides"></div>
             <div class="carrusel-dots" id="carruselDots"></div>
@@ -251,6 +253,8 @@
         const urlPromosCSV = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=Promos`;
         
         let listaMenuData = [];
+        let slideActual = 0;
+        let carruselTimer = null;
 
         // Cargar Promos desde la pestaña 'Promos'
         Papa.parse(urlPromosCSV, {
@@ -258,6 +262,9 @@
             header: true,
             complete: function(resultados) {
                 renderizarPromos(resultados.data);
+            },
+            error: function() {
+                renderizarPromos([]);
             }
         });
 
@@ -273,28 +280,60 @@
             }
         });
 
+        function obtenerCampo(objeto, nombresPosibles) {
+            if (!objeto) return '';
+            for (let k in objeto) {
+                let kLimpia = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                for (let pos of nombresPosibles) {
+                    if (kLimpia.includes(pos)) return objeto[k];
+                }
+            }
+            return '';
+        }
+
         function renderizarPromos(promos) {
             const container = document.getElementById('bannerContainer');
             const slidesContainer = document.getElementById('carruselSlides');
             const dotsContainer = document.getElementById('carruselDots');
             
-            const promosActivas = promos.filter(p => p.Título && (p.Estado === 'Activo' || !p.Estado));
-            
-            if (promosActivas.length === 0) return;
+            let promosActivas = [];
+
+            if (Array.isArray(promos) && promos.length > 0) {
+                promosActivas = promos.map(p => {
+                    const titulo = obtenerCampo(p, ['titulo', 'title', 'nombre', 'promo']) || Object.values(p)[0] || '';
+                    const etiqueta = obtenerCampo(p, ['etiqueta', 'tag', 'badge']) || Object.values(p)[1] || 'Especial 🔥';
+                    const imagen = obtenerCampo(p, ['imagen', 'img', 'foto']) || Object.values(p)[2] || '';
+                    const estado = obtenerCampo(p, ['estado', 'status']) || 'Activo';
+                    return { 
+                        titulo: String(titulo).trim(), 
+                        etiqueta: String(etiqueta).trim(), 
+                        imagen: String(imagen).trim(), 
+                        estado: String(estado).trim() 
+                    };
+                }).filter(p => p.titulo !== '' && (p.estado.toLowerCase().includes('activ') || p.estado === ''));
+            }
+
+            // Fallback: si no hay datos de red todavía, mostrar promociones iniciales
+            if (promosActivas.length === 0) {
+                promosActivas = [
+                    { titulo: "1 kg de Barbacoa + Consomé Gratis", etiqueta: "Especial del Día 🔥", imagen: "img/promo1.jpg" },
+                    { titulo: "Chilaquiles + Café de Olla por $149", etiqueta: "Paquete Mañanero ☕", imagen: "img/promo2.jpg" }
+                ];
+            }
 
             slidesContainer.innerHTML = '';
             dotsContainer.innerHTML = '';
 
             promosActivas.forEach((p, i) => {
-                const img = (p.Imagen && p.Imagen.trim() !== '') ? p.Imagen.trim() : 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1000&q=80';
-                const tag = p.Etiqueta || 'Promoción';
+                const img = (p.imagen && p.imagen !== '') ? p.imagen : 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1000&q=80';
+                const tag = p.etiqueta || 'Promoción';
 
                 slidesContainer.innerHTML += `
                     <div class="slide">
-                        <img src="${img}" alt="${p.Título}" onerror="this.src='https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1000&q=80';">
+                        <img src="${img}" alt="${p.titulo}" onerror="this.src='https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1000&q=80';">
                         <div class="slide-content">
                             <span class="slide-tag">${tag}</span>
-                            <h3 class="slide-titulo">${p.Título}</h3>
+                            <h3 class="slide-titulo">${p.titulo}</h3>
                         </div>
                     </div>
                 `;
@@ -408,9 +447,9 @@
             }
         }
 
-        let slideActual = 0;
         function iniciarCarruselAuto(totalSlides) {
-            setInterval(() => {
+            if (carruselTimer) clearInterval(carruselTimer);
+            carruselTimer = setInterval(() => {
                 slideActual = (slideActual + 1) % totalSlides;
                 moverSlide(slideActual);
             }, 4000);
@@ -420,14 +459,13 @@
             slideActual = index;
             const container = document.getElementById('carruselSlides');
             const dots = document.querySelectorAll('.dot');
-            container.style.transform = `translateX(-${index * 100}%)`;
+            if (container) {
+                container.style.transform = `translateX(-${index * 100}%)`;
+            }
             dots.forEach((dot, i) => {
                 dot.classList.toggle('activo', i === index);
             });
         }
-    </script>
-</body>
-</html>
     </script>
 </body>
 </html>
